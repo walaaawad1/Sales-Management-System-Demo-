@@ -24,8 +24,10 @@ import {
   Layers,
   PlusCircle,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  FileSpreadsheet
 } from 'lucide-react';
+import { utils, writeFile } from 'xlsx';
 import { 
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   PieChart, Pie, Cell, Legend, AreaChart, Area 
@@ -358,7 +360,7 @@ const CustomersView = ({ customers, loyaltyRatio, onAddCustomer, onDeleteCustome
   );
 };
 
-const SalesView = ({ sales, onExportPDF, isExporting, onAddSale }: any) => {
+const SalesView = ({ sales, onExportPDF, onExportExcel, isExporting, isExportingExcel, onAddSale }: any) => {
   const [showAddSale, setShowAddSale] = useState(false);
   const [newSale, setNewSale] = useState({ customerName: '', amount: 0, status: 'completed', city: 'الرياض' });
 
@@ -380,6 +382,10 @@ const SalesView = ({ sales, onExportPDF, isExporting, onAddSale }: any) => {
           >
             <Plus size={16} />
             إضافة عملية بيع
+          </button>
+          <button onClick={onExportExcel} disabled={isExportingExcel || sales.length === 0} className="flex items-center gap-2 px-5 py-2.5 bg-sky-600 rounded-xl text-sm font-bold text-white hover:bg-sky-700 shadow-lg shadow-sky-50 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+            {isExportingExcel ? <Loader2 size={16} className="animate-spin" /> : <FileSpreadsheet size={16} />}
+            تصدير Excel
           </button>
           <button onClick={onExportPDF} disabled={isExporting || sales.length === 0} className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 rounded-xl text-sm font-bold text-white hover:bg-emerald-700 shadow-lg shadow-emerald-50 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
             {isExporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
@@ -464,6 +470,7 @@ const App: React.FC = () => {
   const [insights, setInsights] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
   
   const [customersState, setCustomers] = useState<Customer[]>(MOCK_CUSTOMERS);
   const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
@@ -582,6 +589,30 @@ const App: React.FC = () => {
     html2pdf().set(options).from(element).save().then(() => setIsExporting(false));
   }, []);
 
+  const handleExportExcel = useCallback(() => {
+    setIsExportingExcel(true);
+    try {
+      const dataToExport = sales.map((sale: SaleRecord) => ({
+        'رقم الطلب': sale.id,
+        'اسم العميل': sale.customerName,
+        'التاريخ': sale.date,
+        'المبلغ (ريال)': sale.amount,
+        'الحالة': sale.status === 'completed' ? 'مكتمل' : sale.status === 'pending' ? 'معلق' : 'ملغى',
+        'المدينة': sale.city
+      }));
+
+      const worksheet = utils.json_to_sheet(dataToExport);
+      const workbook = utils.book_new();
+      utils.book_append_sheet(workbook, worksheet, 'المبيعات');
+      
+      writeFile(workbook, `سجل_المبيعات_${Date.now()}.xlsx`);
+    } catch (error) {
+      console.error('Excel export error:', error);
+    } finally {
+      setIsExportingExcel(false);
+    }
+  }, [sales]);
+
   const renderContent = () => {
     switch (activeTab) {
       case 'overview': return (
@@ -596,7 +627,16 @@ const App: React.FC = () => {
           sales={sales}
         />
       );
-      case 'sales': return <SalesView sales={sales} onExportPDF={handleExportPDF} isExporting={isExporting} onAddSale={handleAddSale} />;
+      case 'sales': return (
+        <SalesView 
+          sales={sales} 
+          onExportPDF={handleExportPDF} 
+          onExportExcel={handleExportExcel}
+          isExporting={isExporting} 
+          isExportingExcel={isExportingExcel}
+          onAddSale={handleAddSale} 
+        />
+      );
       case 'customers': return <CustomersView customers={customers} loyaltyRatio={loyaltyRatio} onAddCustomer={handleAddCustomer} onDeleteCustomer={handleDeleteCustomer} />;
       case 'inventory': return <InventoryView products={products} onAddProduct={handleAddProduct} onDeleteProduct={handleDeleteProduct} />;
       default: return null;
@@ -723,3 +763,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+
