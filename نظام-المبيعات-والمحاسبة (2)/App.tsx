@@ -25,7 +25,10 @@ import {
   PlusCircle,
   ChevronRight,
   ChevronLeft,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Search,
+  Calendar as CalendarIcon,
+  MapPin
 } from 'lucide-react';
 import { utils, writeFile } from 'xlsx';
 import { 
@@ -115,6 +118,14 @@ const InventoryView = ({ products, onAddProduct, onDeleteProduct }: {
 }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newProduct, setNewProduct] = useState({ name: '', category: '', price: 0, stock: 0 });
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredProducts = useMemo(() => {
+    return products.filter(p => 
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.category.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [products, searchTerm]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,19 +136,31 @@ const InventoryView = ({ products, onAddProduct, onDeleteProduct }: {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h2 className="text-2xl font-bold text-slate-800">المستودع والمخزون</h2>
-        <button 
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 rounded-xl text-sm font-semibold text-white hover:bg-emerald-700 shadow-md shadow-emerald-100 transition-all active:scale-95"
-        >
-          <Plus size={18} />
-          إضافة منتج جديد
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 md:w-64">
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input 
+              type="text" 
+              placeholder="ابحث باسم المنتج أو الفئة..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pr-11 pl-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:border-emerald-500 outline-none transition-all shadow-sm"
+            />
+          </div>
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 rounded-xl text-sm font-semibold text-white hover:bg-emerald-700 shadow-md shadow-emerald-100 transition-all active:scale-95 whitespace-nowrap"
+          >
+            <Plus size={18} />
+            إضافة منتج
+          </button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map(product => (
+        {filteredProducts.map(product => (
           <div key={product.id} className="bg-white p-5 rounded-[2rem] border border-slate-100 transition-all group hover:shadow-xl hover:-translate-y-1 relative">
             <button 
               onClick={() => onDeleteProduct(product.id)}
@@ -162,21 +185,27 @@ const InventoryView = ({ products, onAddProduct, onDeleteProduct }: {
             </div>
           </div>
         ))}
-        {products.length === 0 && (
+        {filteredProducts.length === 0 && (
           <div className="col-span-full py-24 text-center border-2 border-dashed border-slate-100 rounded-[3rem] bg-white/50">
             <div className="flex flex-col items-center gap-4 text-slate-300">
               <Package size={64} strokeWidth={1} />
               <div className="space-y-1">
-                <p className="text-lg font-bold text-slate-400">المستودع فارغ</p>
-                <p className="text-sm">ابدأ بإضافة أول منتج لمتجرك الآن</p>
+                <p className="text-lg font-bold text-slate-400">
+                  {searchTerm ? 'لا توجد نتائج مطابقة لبحثك' : 'المستودع فارغ'}
+                </p>
+                <p className="text-sm">
+                  {searchTerm ? 'جرب البحث بكلمات أخرى' : 'ابدأ بإضافة أول منتج لمتجرك الآن'}
+                </p>
               </div>
-              <button 
-                onClick={() => setShowAddModal(true)}
-                className="mt-4 px-6 py-3 bg-emerald-50 text-emerald-700 font-black rounded-2xl hover:bg-emerald-100 transition-colors flex items-center gap-2"
-              >
-                <PlusCircle size={20} />
-                أضف منتجك الأول
-              </button>
+              {!searchTerm && (
+                <button 
+                  onClick={() => setShowAddModal(true)}
+                  className="mt-4 px-6 py-3 bg-emerald-50 text-emerald-700 font-black rounded-2xl hover:bg-emerald-100 transition-colors flex items-center gap-2"
+                >
+                  <PlusCircle size={20} />
+                  أضف منتجك الأول
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -236,6 +265,15 @@ const CustomersView = ({ customers, loyaltyRatio, onAddCustomer, onDeleteCustome
 }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', email: '', phone: '' });
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredCustomers = useMemo(() => {
+    return customers.filter(c => 
+      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.phone.includes(searchTerm)
+    );
+  }, [customers, searchTerm]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -246,15 +284,27 @@ const CustomersView = ({ customers, loyaltyRatio, onAddCustomer, onDeleteCustome
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h2 className="text-2xl font-bold text-slate-800">إدارة العملاء</h2>
-        <button 
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 rounded-xl text-sm font-semibold text-white hover:bg-emerald-700 shadow-md shadow-emerald-100 transition-all active:scale-95"
-        >
-          <UserPlus size={18} />
-          إضافة عميل جديد
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 md:w-64">
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input 
+              type="text" 
+              placeholder="ابحث بالاسم، الإيميل أو الجوال..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pr-11 pl-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:border-emerald-500 outline-none transition-all shadow-sm"
+            />
+          </div>
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 rounded-xl text-sm font-semibold text-white hover:bg-emerald-700 shadow-md shadow-emerald-100 transition-all active:scale-95 whitespace-nowrap"
+          >
+            <UserPlus size={18} />
+            إضافة عميل
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -278,7 +328,7 @@ const CustomersView = ({ customers, loyaltyRatio, onAddCustomer, onDeleteCustome
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {customers.map((customer) => (
+              {filteredCustomers.map((customer) => (
                 <tr key={customer.id} className="hover:bg-slate-50/50 transition-all group animate-in slide-in-from-right-2">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
@@ -306,18 +356,22 @@ const CustomersView = ({ customers, loyaltyRatio, onAddCustomer, onDeleteCustome
                   </td>
                 </tr>
               ))}
-              {customers.length === 0 && (
+              {filteredCustomers.length === 0 && (
                 <tr>
                   <td colSpan={5} className="p-24 text-center">
                     <div className="flex flex-col items-center gap-4 text-slate-200">
                       <Users size={64} strokeWidth={1} />
-                      <p className="text-lg font-bold text-slate-300">لا يوجد عملاء مضافين حالياً</p>
-                      <button 
-                        onClick={() => setShowAddModal(true)}
-                        className="mt-2 px-6 py-3 bg-slate-50 text-slate-500 font-black rounded-2xl hover:bg-slate-100 transition-colors"
-                      >
-                        إضافة أول عميل
-                      </button>
+                      <p className="text-lg font-bold text-slate-300">
+                        {searchTerm ? 'لا توجد نتائج مطابقة لبحثك' : 'لا يوجد عملاء مضافين حالياً'}
+                      </p>
+                      {!searchTerm && (
+                        <button 
+                          onClick={() => setShowAddModal(true)}
+                          className="mt-2 px-6 py-3 bg-slate-50 text-slate-500 font-black rounded-2xl hover:bg-slate-100 transition-colors"
+                        >
+                          إضافة أول عميل
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -363,6 +417,28 @@ const CustomersView = ({ customers, loyaltyRatio, onAddCustomer, onDeleteCustome
 const SalesView = ({ sales, onExportPDF, onExportExcel, isExporting, isExportingExcel, onAddSale }: any) => {
   const [showAddSale, setShowAddSale] = useState(false);
   const [newSale, setNewSale] = useState({ customerName: '', amount: 0, status: 'completed', city: 'الرياض' });
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [cityFilter, setCityFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('');
+
+  const filteredSales = useMemo(() => {
+    return sales.filter((sale: SaleRecord) => {
+      const matchesSearch = sale.customerName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           sale.id.includes(searchTerm);
+      const matchesStatus = statusFilter === 'all' || sale.status === statusFilter;
+      const matchesCity = cityFilter === 'all' || sale.city === cityFilter;
+      const matchesDate = !dateFilter || sale.date === dateFilter;
+      
+      return matchesSearch && matchesStatus && matchesCity && matchesDate;
+    });
+  }, [sales, searchTerm, statusFilter, cityFilter, dateFilter]);
+
+  const cities = useMemo(() => {
+    const uniqueCities = Array.from(new Set(sales.map((s: SaleRecord) => s.city)));
+    return uniqueCities;
+  }, [sales]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -373,9 +449,9 @@ const SalesView = ({ sales, onExportPDF, onExportExcel, isExporting, isExporting
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <h2 className="text-2xl font-bold text-slate-800">سجل المبيعات</h2>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button 
             onClick={() => setShowAddSale(true)}
             className="flex items-center gap-2 px-5 py-2.5 bg-emerald-100 rounded-xl text-sm font-bold text-emerald-700 hover:bg-emerald-200 active:scale-95 transition-all"
@@ -393,6 +469,59 @@ const SalesView = ({ sales, onExportPDF, onExportExcel, isExporting, isExporting
           </button>
         </div>
       </div>
+
+      {/* Search and Filters Bar */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="relative">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <input 
+            type="text" 
+            placeholder="ابحث بالعميل أو رقم الطلب..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pr-10 pl-3 py-2 bg-slate-50 border border-transparent rounded-xl text-sm focus:border-emerald-500 focus:bg-white outline-none transition-all"
+          />
+        </div>
+        
+        <div className="relative">
+          <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full pr-10 pl-3 py-2 bg-slate-50 border border-transparent rounded-xl text-sm focus:border-emerald-500 focus:bg-white outline-none transition-all appearance-none"
+          >
+            <option value="all">كل الحالات</option>
+            <option value="completed">مكتمل</option>
+            <option value="pending">معلق</option>
+            <option value="cancelled">ملغى</option>
+          </select>
+        </div>
+
+        <div className="relative">
+          <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <select 
+            value={cityFilter}
+            onChange={(e) => setCityFilter(e.target.value)}
+            className="w-full pr-10 pl-3 py-2 bg-slate-50 border border-transparent rounded-xl text-sm focus:border-emerald-500 focus:bg-white outline-none transition-all appearance-none"
+          >
+            <option value="all">كل المدن</option>
+            {cities.map(city => (
+              <option key={city} value={city}>{city}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="relative">
+          <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <input 
+            type="date" 
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="w-full pr-10 pl-3 py-2 bg-slate-50 border border-transparent rounded-xl text-sm focus:border-emerald-500 focus:bg-white outline-none transition-all"
+          />
+        </div>
+      </div>
+
       <div id="report-content" className="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm">
         <table className="w-full text-right">
           <thead className="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
@@ -400,16 +529,18 @@ const SalesView = ({ sales, onExportPDF, onExportExcel, isExporting, isExporting
               <th className="p-5">رقم الطلب</th>
               <th className="p-5">العميل</th>
               <th className="p-5">التاريخ</th>
+              <th className="p-5">المدينة</th>
               <th className="p-5">المبلغ</th>
               <th className="p-5">الحالة</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {sales.map((sale: SaleRecord) => (
+            {filteredSales.map((sale: SaleRecord) => (
               <tr key={sale.id} className="hover:bg-slate-50/50 transition-colors">
                 <td className="p-5 font-mono text-xs text-slate-400">#{sale.id}</td>
                 <td className="p-5 font-bold text-slate-700">{sale.customerName}</td>
                 <td className="p-5 text-slate-500 text-sm">{sale.date}</td>
+                <td className="p-5 text-slate-500 text-sm">{sale.city}</td>
                 <td className="p-5 font-black text-emerald-700">{sale.amount.toLocaleString()} ريال</td>
                 <td className="p-5">
                   <span className={`px-3 py-1 rounded-full text-[10px] font-black ${
@@ -421,12 +552,14 @@ const SalesView = ({ sales, onExportPDF, onExportExcel, isExporting, isExporting
                 </td>
               </tr>
             ))}
-            {sales.length === 0 && (
+            {filteredSales.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-24 text-center">
+                <td colSpan={6} className="p-24 text-center">
                   <div className="flex flex-col items-center gap-4 text-slate-200">
                     <FileText size={64} strokeWidth={1} />
-                    <p className="text-lg font-bold text-slate-300">لا توجد عمليات مبيعات مسجلة</p>
+                    <p className="text-lg font-bold text-slate-300">
+                      {searchTerm || statusFilter !== 'all' || cityFilter !== 'all' || dateFilter ? 'لا توجد نتائج مطابقة للفلاتر' : 'لا توجد عمليات مبيعات مسجلة'}
+                    </p>
                   </div>
                 </td>
               </tr>
@@ -449,9 +582,28 @@ const SalesView = ({ sales, onExportPDF, onExportExcel, isExporting, isExporting
                 <label className="text-xs font-black text-slate-400 mr-1">اسم العميل</label>
                 <input required type="text" value={newSale.customerName} onChange={e => setNewSale({...newSale, customerName: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold" placeholder="اسم العميل..." />
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-slate-400 mr-1">المبلغ (ريال)</label>
+                  <input required type="number" value={newSale.amount || ''} onChange={e => setNewSale({...newSale, amount: Number(e.target.value)})} className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold" placeholder="0" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-slate-400 mr-1">المدينة</label>
+                  <input required type="text" value={newSale.city} onChange={e => setNewSale({...newSale, city: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold" placeholder="الرياض" />
+                </div>
+              </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-black text-slate-400 mr-1">المبلغ (ريال)</label>
-                <input required type="number" value={newSale.amount || ''} onChange={e => setNewSale({...newSale, amount: Number(e.target.value)})} className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold" placeholder="0" />
+                <label className="text-xs font-black text-slate-400 mr-1">حالة الطلب</label>
+                <select 
+                  required 
+                  value={newSale.status} 
+                  onChange={e => setNewSale({...newSale, status: e.target.value})} 
+                  className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold appearance-none"
+                >
+                  <option value="completed">مكتمل</option>
+                  <option value="pending">معلق</option>
+                  <option value="cancelled">ملغى</option>
+                </select>
               </div>
               <button type="submit" className="w-full py-5 bg-emerald-600 text-white font-black rounded-2xl shadow-xl shadow-emerald-100 hover:bg-emerald-700 transition-all mt-4">
                 تسجيل العملية
@@ -763,4 +915,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
