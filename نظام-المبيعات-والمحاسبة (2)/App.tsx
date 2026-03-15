@@ -28,7 +28,9 @@ import {
   FileSpreadsheet,
   Search,
   Calendar as CalendarIcon,
-  MapPin
+  MapPin,
+  Moon,
+  Sun
 } from 'lucide-react';
 import { utils, writeFile } from 'xlsx';
 import { 
@@ -42,7 +44,7 @@ import { Customer, Product, SaleRecord } from './types';
 
 const COLORS = ['#059669', '#d97706', '#0ea5e9', '#f43f5e', '#8b5cf6'];
 
-const OverviewView = ({ totalDaily, totalWeekly, totalMonthly, completedOrders, pendingOrders, cancelledOrders, lowStockCount, sales }: any) => (
+const OverviewView = ({ totalDaily, totalWeekly, totalMonthly, completedOrders, pendingOrders, cancelledOrders, lowStockCount, sales, isDarkMode }: any) => (
   <div id="overview-report" className="space-y-6 animate-in fade-in duration-500">
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <StatCard title="إجمالي المبيعات (اليوم)" value={`${totalDaily.toLocaleString()} ريال`} trend={totalDaily > 0 ? { value: 0, isUp: true } : undefined} icon={<TrendingUp size={24} />} color="bg-emerald-600" />
@@ -52,8 +54,8 @@ const OverviewView = ({ totalDaily, totalWeekly, totalMonthly, completedOrders, 
     </div>
 
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-        <h3 className="font-bold text-lg mb-6 text-slate-700">تحليل الإيرادات</h3>
+      <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+        <h3 className="font-bold text-lg mb-6 text-slate-700 dark:text-slate-300">تحليل الإيرادات</h3>
         <div className="h-[300px] w-full">
           {sales.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
@@ -64,23 +66,23 @@ const OverviewView = ({ totalDaily, totalWeekly, totalMonthly, completedOrders, 
                     <stop offset="95%" stopColor="#059669" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDarkMode ? "#1e293b" : "#f1f5f9"} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: isDarkMode ? '#64748b' : '#94a3b8', fontSize: 12}} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: isDarkMode ? '#64748b' : '#94a3b8', fontSize: 12}} />
+                <Tooltip contentStyle={{ backgroundColor: isDarkMode ? '#0f172a' : '#fff', border: `1px solid ${isDarkMode ? '#1e293b' : '#f1f5f9'}`, borderRadius: '12px', color: isDarkMode ? '#f8fafc' : '#1e293b' }} />
                 <Area type="monotone" dataKey="current" stroke="#059669" strokeWidth={3} fillOpacity={1} fill="url(#colorCurrent)" />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-2 border-2 border-dashed border-slate-50 rounded-3xl">
+            <div className="h-full flex flex-col items-center justify-center text-slate-300 dark:text-slate-700 gap-2 border-2 border-dashed border-slate-50 dark:border-slate-800 rounded-3xl">
               <TrendingUp size={48} strokeWidth={1} />
               <p className="text-sm font-medium">لا توجد بيانات مبيعات للعرض حالياً</p>
             </div>
           )}
         </div>
       </div>
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-        <h3 className="font-bold text-lg mb-6 text-slate-700">حالة الطلبات</h3>
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+        <h3 className="font-bold text-lg mb-6 text-slate-700 dark:text-slate-300">حالة الطلبات</h3>
         <div className="h-[250px] w-full">
           {sales.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
@@ -95,12 +97,12 @@ const OverviewView = ({ totalDaily, totalWeekly, totalMonthly, completedOrders, 
                 >
                   {[0, 1, 2].map((index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} cornerRadius={4} />)}
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={{ backgroundColor: isDarkMode ? '#0f172a' : '#fff', border: `1px solid ${isDarkMode ? '#1e293b' : '#f1f5f9'}`, borderRadius: '12px', color: isDarkMode ? '#f8fafc' : '#1e293b' }} />
                 <Legend verticalAlign="bottom" height={36} iconType="circle" />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-2 border-2 border-dashed border-slate-50 rounded-3xl">
+            <div className="h-full flex flex-col items-center justify-center text-slate-300 dark:text-slate-700 gap-2 border-2 border-dashed border-slate-50 dark:border-slate-800 rounded-3xl">
               <ShoppingBag size={48} strokeWidth={1} />
               <p className="text-sm font-medium">أضف طلباتك الأولى للتحليل</p>
             </div>
@@ -146,12 +148,12 @@ const InventoryView = ({ products, onAddProduct, onDeleteProduct }: {
               placeholder="ابحث باسم المنتج أو الفئة..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pr-11 pl-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:border-emerald-500 outline-none transition-all shadow-sm"
+              className="w-full pr-11 pl-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:border-emerald-500 outline-none transition-all shadow-sm dark:text-white"
             />
           </div>
           <button 
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 rounded-xl text-sm font-semibold text-white hover:bg-emerald-700 shadow-md shadow-emerald-100 transition-all active:scale-95 whitespace-nowrap"
+            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 rounded-xl text-sm font-semibold text-white hover:bg-emerald-700 shadow-md shadow-emerald-100 dark:shadow-none transition-all active:scale-95 whitespace-nowrap"
           >
             <Plus size={18} />
             إضافة منتج
@@ -186,21 +188,21 @@ const InventoryView = ({ products, onAddProduct, onDeleteProduct }: {
           </div>
         ))}
         {filteredProducts.length === 0 && (
-          <div className="col-span-full py-24 text-center border-2 border-dashed border-slate-100 rounded-[3rem] bg-white/50">
-            <div className="flex flex-col items-center gap-4 text-slate-300">
+          <div className="col-span-full py-24 text-center border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-[3rem] bg-white/50 dark:bg-slate-900/50">
+            <div className="flex flex-col items-center gap-4 text-slate-300 dark:text-slate-700">
               <Package size={64} strokeWidth={1} />
               <div className="space-y-1">
-                <p className="text-lg font-bold text-slate-400">
+                <p className="text-lg font-bold text-slate-400 dark:text-slate-500">
                   {searchTerm ? 'لا توجد نتائج مطابقة لبحثك' : 'المستودع فارغ'}
                 </p>
-                <p className="text-sm">
+                <p className="text-sm dark:text-slate-600">
                   {searchTerm ? 'جرب البحث بكلمات أخرى' : 'ابدأ بإضافة أول منتج لمتجرك الآن'}
                 </p>
               </div>
               {!searchTerm && (
                 <button 
                   onClick={() => setShowAddModal(true)}
-                  className="mt-4 px-6 py-3 bg-emerald-50 text-emerald-700 font-black rounded-2xl hover:bg-emerald-100 transition-colors flex items-center gap-2"
+                  className="mt-4 px-6 py-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 font-black rounded-2xl hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors flex items-center gap-2"
                 >
                   <PlusCircle size={20} />
                   أضف منتجك الأول
@@ -213,21 +215,21 @@ const InventoryView = ({ products, onAddProduct, onDeleteProduct }: {
 
       {showAddModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-8 animate-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl p-8 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between mb-8">
-              <h3 className="text-xl font-black text-slate-800">بيانات المنتج الجديد</h3>
-              <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+              <h3 className="text-xl font-black text-slate-800 dark:text-white">بيانات المنتج الجديد</h3>
+              <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-400 dark:text-slate-600">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1.5">
-                <label className="text-xs font-black text-slate-400 mr-1">اسم المنتج</label>
-                <input required type="text" value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold" placeholder="مثلاً: آيفون 15 برو" />
+                <label className="text-xs font-black text-slate-400 dark:text-slate-500 mr-1">اسم المنتج</label>
+                <input required type="text" value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-700 outline-none transition-all font-bold dark:text-white" placeholder="مثلاً: آيفون 15 برو" />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-black text-slate-400 mr-1">الفئة</label>
-                <select required value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold appearance-none">
+                <label className="text-xs font-black text-slate-400 dark:text-slate-500 mr-1">الفئة</label>
+                <select required value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})} className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-700 outline-none transition-all font-bold appearance-none dark:text-white">
                   <option value="">اختر الفئة...</option>
                   <option value="إلكترونيات">إلكترونيات</option>
                   <option value="إكسسوارات">إكسسوارات</option>
@@ -237,15 +239,15 @@ const InventoryView = ({ products, onAddProduct, onDeleteProduct }: {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black text-slate-400 mr-1">السعر (ريال)</label>
-                  <input required type="number" value={newProduct.price || ''} onChange={e => setNewProduct({...newProduct, price: Number(e.target.value)})} className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold" placeholder="0" />
+                  <label className="text-xs font-black text-slate-400 dark:text-slate-500 mr-1">السعر (ريال)</label>
+                  <input required type="number" value={newProduct.price || ''} onChange={e => setNewProduct({...newProduct, price: Number(e.target.value)})} className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-700 outline-none transition-all font-bold dark:text-white" placeholder="0" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black text-slate-400 mr-1">الكمية</label>
-                  <input required type="number" value={newProduct.stock || ''} onChange={e => setNewProduct({...newProduct, stock: Number(e.target.value)})} className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold" placeholder="0" />
+                  <label className="text-xs font-black text-slate-400 dark:text-slate-500 mr-1">الكمية</label>
+                  <input required type="number" value={newProduct.stock || ''} onChange={e => setNewProduct({...newProduct, stock: Number(e.target.value)})} className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-700 outline-none transition-all font-bold dark:text-white" placeholder="0" />
                 </div>
               </div>
-              <button type="submit" className="w-full py-5 bg-emerald-600 text-white font-black rounded-2xl shadow-xl shadow-emerald-100 hover:bg-emerald-700 hover:-translate-y-0.5 active:scale-95 transition-all mt-4 flex items-center justify-center gap-2">
+              <button type="submit" className="w-full py-5 bg-emerald-600 text-white font-black rounded-2xl shadow-xl shadow-emerald-100 dark:shadow-none hover:bg-emerald-700 hover:-translate-y-0.5 active:scale-95 transition-all mt-4 flex items-center justify-center gap-2">
                 <Plus size={20} />
                 تأكيد إضافة المنتج
               </button>
@@ -312,13 +314,13 @@ const CustomersView = ({ customers, loyaltyRatio, onAddCustomer, onDeleteCustome
         <StatCard title="نسبة الولاء (العائدين)" value={`${loyaltyRatio}%`} icon={<RefreshCcw size={24} />} color="bg-sky-600" />
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-50">
-          <h3 className="font-bold text-lg text-slate-700">قائمة العملاء الحالية</h3>
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-50 dark:border-slate-800">
+          <h3 className="font-bold text-lg text-slate-700 dark:text-slate-300">قائمة العملاء الحالية</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-right">
-            <thead className="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-widest">
               <tr>
                 <th className="p-4">الاسم</th>
                 <th className="p-4">التواصل</th>
@@ -327,29 +329,29 @@ const CustomersView = ({ customers, loyaltyRatio, onAddCustomer, onDeleteCustome
                 <th className="p-4 text-center">إجراءات</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
               {filteredCustomers.map((customer) => (
-                <tr key={customer.id} className="hover:bg-slate-50/50 transition-all group animate-in slide-in-from-right-2">
+                <tr key={customer.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all group animate-in slide-in-from-right-2">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-700 font-black text-sm border border-emerald-100">
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-black text-sm border border-emerald-100 dark:border-emerald-800">
                         {customer.name.charAt(0)}
                       </div>
-                      <span className="font-bold text-slate-700">{customer.name}</span>
+                      <span className="font-bold text-slate-700 dark:text-slate-300">{customer.name}</span>
                     </div>
                   </td>
                   <td className="p-4">
                     <div className="text-sm">
-                      <p className="text-slate-600 font-medium">{customer.email}</p>
-                      <p className="text-slate-400 text-xs">{customer.phone}</p>
+                      <p className="text-slate-600 dark:text-slate-400 font-medium">{customer.email}</p>
+                      <p className="text-slate-400 dark:text-slate-500 text-xs">{customer.phone}</p>
                     </div>
                   </td>
-                  <td className="p-4 text-sm text-slate-500">{customer.joinDate}</td>
-                  <td className="p-4 font-black text-emerald-700">{customer.totalSpent.toLocaleString()} ريال</td>
+                  <td className="p-4 text-sm text-slate-500 dark:text-slate-400">{customer.joinDate}</td>
+                  <td className="p-4 font-black text-emerald-700 dark:text-emerald-400">{customer.totalSpent.toLocaleString()} ريال</td>
                   <td className="p-4 text-center">
                     <button 
                       onClick={() => onDeleteCustomer(customer.id)}
-                      className="p-3 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all active:scale-75 shadow-sm hover:shadow-md"
+                      className="p-3 text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-all active:scale-75 shadow-sm hover:shadow-md"
                     >
                       <Trash2 size={22} />
                     </button>
@@ -359,15 +361,15 @@ const CustomersView = ({ customers, loyaltyRatio, onAddCustomer, onDeleteCustome
               {filteredCustomers.length === 0 && (
                 <tr>
                   <td colSpan={5} className="p-24 text-center">
-                    <div className="flex flex-col items-center gap-4 text-slate-200">
+                    <div className="flex flex-col items-center gap-4 text-slate-200 dark:text-slate-800">
                       <Users size={64} strokeWidth={1} />
-                      <p className="text-lg font-bold text-slate-300">
+                      <p className="text-lg font-bold text-slate-300 dark:text-slate-700">
                         {searchTerm ? 'لا توجد نتائج مطابقة لبحثك' : 'لا يوجد عملاء مضافين حالياً'}
                       </p>
                       {!searchTerm && (
                         <button 
                           onClick={() => setShowAddModal(true)}
-                          className="mt-2 px-6 py-3 bg-slate-50 text-slate-500 font-black rounded-2xl hover:bg-slate-100 transition-colors"
+                          className="mt-2 px-6 py-3 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-black rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                         >
                           إضافة أول عميل
                         </button>
@@ -383,27 +385,27 @@ const CustomersView = ({ customers, loyaltyRatio, onAddCustomer, onDeleteCustome
 
       {showAddModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-8 animate-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl p-8 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between mb-8">
-              <h3 className="text-xl font-black text-slate-800">بيانات العميل الجديد</h3>
-              <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+              <h3 className="text-xl font-black text-slate-800 dark:text-white">بيانات العميل الجديد</h3>
+              <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-400 dark:text-slate-600">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1.5">
-                <label className="text-xs font-black text-slate-400 mr-1">الاسم الكامل</label>
-                <input required type="text" value={newCustomer.name} onChange={e => setNewCustomer({...newCustomer, name: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold" placeholder="محمد السبيعي" />
+                <label className="text-xs font-black text-slate-400 dark:text-slate-500 mr-1">الاسم الكامل</label>
+                <input required type="text" value={newCustomer.name} onChange={e => setNewCustomer({...newCustomer, name: e.target.value})} className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-700 outline-none transition-all font-bold dark:text-white" placeholder="محمد السبيعي" />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-black text-slate-400 mr-1">البريد الإلكتروني</label>
-                <input required type="email" value={newCustomer.email} onChange={e => setNewCustomer({...newCustomer, email: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold" placeholder="user@domain.com" />
+                <label className="text-xs font-black text-slate-400 dark:text-slate-500 mr-1">البريد الإلكتروني</label>
+                <input required type="email" value={newCustomer.email} onChange={e => setNewCustomer({...newCustomer, email: e.target.value})} className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-700 outline-none transition-all font-bold dark:text-white" placeholder="user@domain.com" />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-black text-slate-400 mr-1">رقم الجوال</label>
-                <input required type="tel" value={newCustomer.phone} onChange={e => setNewCustomer({...newCustomer, phone: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold" placeholder="05XXXXXXXX" />
+                <label className="text-xs font-black text-slate-400 dark:text-slate-500 mr-1">رقم الجوال</label>
+                <input required type="tel" value={newCustomer.phone} onChange={e => setNewCustomer({...newCustomer, phone: e.target.value})} className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-700 outline-none transition-all font-bold dark:text-white" placeholder="05XXXXXXXX" />
               </div>
-              <button type="submit" className="w-full py-5 bg-emerald-600 text-white font-black rounded-2xl shadow-xl shadow-emerald-100 hover:bg-emerald-700 hover:-translate-y-0.5 active:scale-95 transition-all mt-4">
+              <button type="submit" className="w-full py-5 bg-emerald-600 text-white font-black rounded-2xl shadow-xl shadow-emerald-100 dark:shadow-none hover:bg-emerald-700 hover:-translate-y-0.5 active:scale-95 transition-all mt-4">
                 تأكيد الإضافة
               </button>
             </form>
@@ -450,20 +452,20 @@ const SalesView = ({ sales, onExportPDF, onExportExcel, isExporting, isExporting
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold text-slate-800">سجل المبيعات</h2>
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">سجل المبيعات</h2>
         <div className="flex flex-wrap gap-3">
           <button 
             onClick={() => setShowAddSale(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-100 rounded-xl text-sm font-bold text-emerald-700 hover:bg-emerald-200 active:scale-95 transition-all"
+            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-100 dark:bg-emerald-900/20 rounded-xl text-sm font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/40 active:scale-95 transition-all"
           >
             <Plus size={16} />
             إضافة عملية بيع
           </button>
-          <button onClick={onExportExcel} disabled={isExportingExcel || sales.length === 0} className="flex items-center gap-2 px-5 py-2.5 bg-sky-600 rounded-xl text-sm font-bold text-white hover:bg-sky-700 shadow-lg shadow-sky-50 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={onExportExcel} disabled={isExportingExcel || sales.length === 0} className="flex items-center gap-2 px-5 py-2.5 bg-sky-600 rounded-xl text-sm font-bold text-white hover:bg-sky-700 shadow-lg shadow-sky-50 dark:shadow-none active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
             {isExportingExcel ? <Loader2 size={16} className="animate-spin" /> : <FileSpreadsheet size={16} />}
             تصدير Excel
           </button>
-          <button onClick={onExportPDF} disabled={isExporting || sales.length === 0} className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 rounded-xl text-sm font-bold text-white hover:bg-emerald-700 shadow-lg shadow-emerald-50 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={onExportPDF} disabled={isExporting || sales.length === 0} className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 rounded-xl text-sm font-bold text-white hover:bg-emerald-700 shadow-lg shadow-emerald-50 dark:shadow-none active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
             {isExporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
             تصدير PDF
           </button>
@@ -471,7 +473,7 @@ const SalesView = ({ sales, onExportPDF, onExportExcel, isExporting, isExporting
       </div>
 
       {/* Search and Filters Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="relative">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <input 
@@ -479,7 +481,7 @@ const SalesView = ({ sales, onExportPDF, onExportExcel, isExporting, isExporting
             placeholder="ابحث بالعميل أو رقم الطلب..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pr-10 pl-3 py-2 bg-slate-50 border border-transparent rounded-xl text-sm focus:border-emerald-500 focus:bg-white outline-none transition-all"
+            className="w-full pr-10 pl-3 py-2 bg-slate-50 dark:bg-slate-800 border border-transparent rounded-xl text-sm focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-700 outline-none transition-all dark:text-white"
           />
         </div>
         
@@ -488,7 +490,7 @@ const SalesView = ({ sales, onExportPDF, onExportExcel, isExporting, isExporting
           <select 
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full pr-10 pl-3 py-2 bg-slate-50 border border-transparent rounded-xl text-sm focus:border-emerald-500 focus:bg-white outline-none transition-all appearance-none"
+            className="w-full pr-10 pl-3 py-2 bg-slate-50 dark:bg-slate-800 border border-transparent rounded-xl text-sm focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-700 outline-none transition-all appearance-none dark:text-white"
           >
             <option value="all">كل الحالات</option>
             <option value="completed">مكتمل</option>
@@ -502,7 +504,7 @@ const SalesView = ({ sales, onExportPDF, onExportExcel, isExporting, isExporting
           <select 
             value={cityFilter}
             onChange={(e) => setCityFilter(e.target.value)}
-            className="w-full pr-10 pl-3 py-2 bg-slate-50 border border-transparent rounded-xl text-sm focus:border-emerald-500 focus:bg-white outline-none transition-all appearance-none"
+            className="w-full pr-10 pl-3 py-2 bg-slate-50 dark:bg-slate-800 border border-transparent rounded-xl text-sm focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-700 outline-none transition-all appearance-none dark:text-white"
           >
             <option value="all">كل المدن</option>
             {cities.map(city => (
@@ -517,14 +519,14 @@ const SalesView = ({ sales, onExportPDF, onExportExcel, isExporting, isExporting
             type="date" 
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="w-full pr-10 pl-3 py-2 bg-slate-50 border border-transparent rounded-xl text-sm focus:border-emerald-500 focus:bg-white outline-none transition-all"
+            className="w-full pr-10 pl-3 py-2 bg-slate-50 dark:bg-slate-800 border border-transparent rounded-xl text-sm focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-700 outline-none transition-all dark:text-white"
           />
         </div>
       </div>
 
-      <div id="report-content" className="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm">
+      <div id="report-content" className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
         <table className="w-full text-right">
-          <thead className="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+          <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-widest">
             <tr>
               <th className="p-5">رقم الطلب</th>
               <th className="p-5">العميل</th>
@@ -534,18 +536,18 @@ const SalesView = ({ sales, onExportPDF, onExportExcel, isExporting, isExporting
               <th className="p-5">الحالة</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-50">
+          <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
             {filteredSales.map((sale: SaleRecord) => (
-              <tr key={sale.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="p-5 font-mono text-xs text-slate-400">#{sale.id}</td>
-                <td className="p-5 font-bold text-slate-700">{sale.customerName}</td>
-                <td className="p-5 text-slate-500 text-sm">{sale.date}</td>
-                <td className="p-5 text-slate-500 text-sm">{sale.city}</td>
-                <td className="p-5 font-black text-emerald-700">{sale.amount.toLocaleString()} ريال</td>
+              <tr key={sale.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                <td className="p-5 font-mono text-xs text-slate-400 dark:text-slate-500">#{sale.id}</td>
+                <td className="p-5 font-bold text-slate-700 dark:text-slate-300">{sale.customerName}</td>
+                <td className="p-5 text-slate-500 dark:text-slate-400 text-sm">{sale.date}</td>
+                <td className="p-5 text-slate-500 dark:text-slate-400 text-sm">{sale.city}</td>
+                <td className="p-5 font-black text-emerald-700 dark:text-emerald-400">{sale.amount.toLocaleString()} ريال</td>
                 <td className="p-5">
                   <span className={`px-3 py-1 rounded-full text-[10px] font-black ${
-                    sale.status === 'completed' ? 'bg-emerald-50 text-emerald-600' : 
-                    sale.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
+                    sale.status === 'completed' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 
+                    sale.status === 'pending' ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'
                   }`}>
                     {sale.status === 'completed' ? 'مكتمل' : sale.status === 'pending' ? 'معلق' : 'ملغى'}
                   </span>
@@ -555,9 +557,9 @@ const SalesView = ({ sales, onExportPDF, onExportExcel, isExporting, isExporting
             {filteredSales.length === 0 && (
               <tr>
                 <td colSpan={6} className="p-24 text-center">
-                  <div className="flex flex-col items-center gap-4 text-slate-200">
+                  <div className="flex flex-col items-center gap-4 text-slate-200 dark:text-slate-800">
                     <FileText size={64} strokeWidth={1} />
-                    <p className="text-lg font-bold text-slate-300">
+                    <p className="text-lg font-bold text-slate-300 dark:text-slate-700">
                       {searchTerm || statusFilter !== 'all' || cityFilter !== 'all' || dateFilter ? 'لا توجد نتائج مطابقة للفلاتر' : 'لا توجد عمليات مبيعات مسجلة'}
                     </p>
                   </div>
@@ -570,42 +572,42 @@ const SalesView = ({ sales, onExportPDF, onExportExcel, isExporting, isExporting
 
       {showAddSale && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-8 animate-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl p-8 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between mb-8">
-              <h3 className="text-xl font-black text-slate-800">إضافة مبيعات جديدة</h3>
-              <button onClick={() => setShowAddSale(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+              <h3 className="text-xl font-black text-slate-800 dark:text-white">إضافة مبيعات جديدة</h3>
+              <button onClick={() => setShowAddSale(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-400 dark:text-slate-600">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1.5">
-                <label className="text-xs font-black text-slate-400 mr-1">اسم العميل</label>
-                <input required type="text" value={newSale.customerName} onChange={e => setNewSale({...newSale, customerName: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold" placeholder="اسم العميل..." />
+                <label className="text-xs font-black text-slate-400 dark:text-slate-500 mr-1">اسم العميل</label>
+                <input required type="text" value={newSale.customerName} onChange={e => setNewSale({...newSale, customerName: e.target.value})} className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-700 outline-none transition-all font-bold dark:text-white" placeholder="اسم العميل..." />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black text-slate-400 mr-1">المبلغ (ريال)</label>
-                  <input required type="number" value={newSale.amount || ''} onChange={e => setNewSale({...newSale, amount: Number(e.target.value)})} className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold" placeholder="0" />
+                  <label className="text-xs font-black text-slate-400 dark:text-slate-500 mr-1">المبلغ (ريال)</label>
+                  <input required type="number" value={newSale.amount || ''} onChange={e => setNewSale({...newSale, amount: Number(e.target.value)})} className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-700 outline-none transition-all font-bold dark:text-white" placeholder="0" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black text-slate-400 mr-1">المدينة</label>
-                  <input required type="text" value={newSale.city} onChange={e => setNewSale({...newSale, city: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold" placeholder="الرياض" />
+                  <label className="text-xs font-black text-slate-400 dark:text-slate-500 mr-1">المدينة</label>
+                  <input required type="text" value={newSale.city} onChange={e => setNewSale({...newSale, city: e.target.value})} className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-700 outline-none transition-all font-bold dark:text-white" placeholder="الرياض" />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-black text-slate-400 mr-1">حالة الطلب</label>
+                <label className="text-xs font-black text-slate-400 dark:text-slate-500 mr-1">حالة الطلب</label>
                 <select 
                   required 
                   value={newSale.status} 
                   onChange={e => setNewSale({...newSale, status: e.target.value})} 
-                  className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold appearance-none"
+                  className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-700 outline-none transition-all font-bold appearance-none dark:text-white"
                 >
                   <option value="completed">مكتمل</option>
                   <option value="pending">معلق</option>
                   <option value="cancelled">ملغى</option>
                 </select>
               </div>
-              <button type="submit" className="w-full py-5 bg-emerald-600 text-white font-black rounded-2xl shadow-xl shadow-emerald-100 hover:bg-emerald-700 transition-all mt-4">
+              <button type="submit" className="w-full py-5 bg-emerald-600 text-white font-black rounded-2xl shadow-xl shadow-emerald-100 dark:shadow-none hover:bg-emerald-700 transition-all mt-4">
                 تسجيل العملية
               </button>
             </form>
@@ -617,7 +619,19 @@ const SalesView = ({ sales, onExportPDF, onExportExcel, isExporting, isExporting
 };
 
 const App: React.FC = () => {
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode');
+    return saved ? JSON.parse(saved) : false;
+  });
   const [activeTab, setActiveTab] = useState('overview');
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(prev => {
+      const newValue = !prev;
+      localStorage.setItem('darkMode', JSON.stringify(newValue));
+      return newValue;
+    });
+  };
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [insights, setInsights] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -796,120 +810,129 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-[#fcfdfe] text-slate-800 overflow-hidden" dir="rtl">
-      {/* Overlay for mobile when sidebar is open */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] z-[40] lg:hidden transition-all duration-300"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+    <div className={`${isDarkMode ? 'dark' : ''}`}>
+      <div className="flex h-screen bg-[#fcfdfe] dark:bg-slate-950 text-slate-800 dark:text-slate-200 overflow-hidden" dir="rtl">
+        {/* Overlay for mobile when sidebar is open */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-[2px] z-[40] lg:hidden transition-all duration-300"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
-      {/* Sidebar Container */}
-      <aside 
-        className={`
-          fixed inset-y-0 right-0 z-[50] w-72 bg-white border-l border-slate-100 transition-all duration-300 ease-in-out transform
-          ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-full lg:w-0'}
-          lg:relative lg:translate-x-0 ${!isSidebarOpen && 'lg:hidden'}
-        `}
-      >
-        <div className="flex flex-col h-full p-6 w-72">
-          <div className="flex items-center justify-between mb-10 px-2">
-             <div className="flex items-center gap-3">
-               <div className="w-12 h-12 bg-emerald-700 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-emerald-100">
-                 <TrendingUp size={24} />
+        {/* Sidebar Container */}
+        <aside 
+          className={`
+            fixed inset-y-0 right-0 z-[50] w-72 bg-white dark:bg-slate-900 border-l border-slate-100 dark:border-slate-800 transition-all duration-300 ease-in-out transform
+            ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-full lg:w-0'}
+            lg:relative lg:translate-x-0 ${!isSidebarOpen && 'lg:hidden'}
+          `}
+        >
+          <div className="flex flex-col h-full p-6 w-72">
+            <div className="flex items-center justify-between mb-10 px-2">
+               <div className="flex items-center gap-3">
+                 <div className="w-12 h-12 bg-emerald-700 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-emerald-100 dark:shadow-none">
+                   <TrendingUp size={24} />
+                 </div>
+                 <h1 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">نظام المبيعات</h1>
                </div>
-               <h1 className="text-xl font-black text-slate-800 tracking-tight">نظام المبيعات</h1>
-             </div>
-             {/* Close button inside sidebar for mobile */}
-             <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-2 text-slate-400 hover:text-emerald-600 transition-colors">
-               <X size={20} />
-             </button>
-          </div>
+               {/* Close button inside sidebar for mobile */}
+               <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-2 text-slate-400 hover:text-emerald-600 transition-colors">
+                 <X size={20} />
+               </button>
+            </div>
 
-          <nav className="flex-1 space-y-2">
-            {[
-              { id: 'overview', icon: LayoutDashboard, label: 'الرئيسية' },
-              { id: 'sales', icon: ShoppingBag, label: 'المبيعات' },
-              { id: 'customers', icon: Users, label: 'العملاء' },
-              { id: 'inventory', icon: Package, label: 'المستودع' },
-            ].map((item) => (
-              <button 
-                key={item.id} 
-                onClick={() => {
-                  setActiveTab(item.id);
-                  if (window.innerWidth < 1024) setSidebarOpen(false);
-                }} 
-                className={`flex items-center w-full px-5 py-4 rounded-2xl transition-all ${activeTab === item.id ? 'bg-emerald-700 text-white shadow-lg shadow-emerald-100' : 'text-slate-400 hover:bg-slate-50 hover:text-emerald-700'}`}
-              >
-                <item.icon className="ml-4" size={20} />
-                <span className="font-black text-sm">{item.label}</span>
-              </button>
-            ))}
-          </nav>
+            <nav className="flex-1 space-y-2">
+              {[
+                { id: 'overview', icon: LayoutDashboard, label: 'الرئيسية' },
+                { id: 'sales', icon: ShoppingBag, label: 'المبيعات' },
+                { id: 'customers', icon: Users, label: 'العملاء' },
+                { id: 'inventory', icon: Package, label: 'المستودع' },
+              ].map((item) => (
+                <button 
+                  key={item.id} 
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    if (window.innerWidth < 1024) setSidebarOpen(false);
+                  }} 
+                  className={`flex items-center w-full px-5 py-4 rounded-2xl transition-all ${activeTab === item.id ? 'bg-emerald-700 text-white shadow-lg shadow-emerald-100 dark:shadow-none' : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-400'}`}
+                >
+                  <item.icon className="ml-4" size={20} />
+                  <span className="font-black text-sm">{item.label}</span>
+                </button>
+              ))}
+            </nav>
 
-          <div className="mt-auto pt-6 border-t border-slate-50 text-center">
-            <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">إصدار 1.0.0</p>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 h-full overflow-hidden transition-all duration-300">
-        <header className="h-24 bg-white/70 backdrop-blur-xl border-b border-slate-50 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 shrink-0">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setSidebarOpen(!isSidebarOpen)} 
-              className={`p-3 bg-slate-100 text-slate-600 rounded-2xl hover:bg-emerald-50 hover:text-emerald-700 transition-all active:scale-90 shadow-sm`}
-              title={isSidebarOpen ? "إخفاء القائمة" : "إظهار القائمة"}
-            >
-              {isSidebarOpen ? <ChevronRight size={22} /> : <Menu size={22} />}
-            </button>
-            <div className="hidden sm:block">
-              <h2 className="font-black text-slate-800 text-lg">لوحة التحكم</h2>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">أهلاً بك مجدداً</p>
+            <div className="mt-auto pt-6 border-t border-slate-50 dark:border-slate-800 text-center">
+              <p className="text-[10px] font-bold text-slate-300 dark:text-slate-600 uppercase tracking-widest">إصدار 1.0.0</p>
             </div>
           </div>
+        </aside>
 
-          <div className="flex items-center gap-4">
-              <div className="text-left hidden xs:block">
-                <p className="text-sm font-black text-slate-800">عامر ابراهيم</p>
-                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest text-left">مسؤول النظام</p>
+        {/* Main Content Area */}
+        <main className="flex-1 flex flex-col min-w-0 h-full overflow-hidden transition-all duration-300">
+          <header className="h-24 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-50 dark:border-slate-800 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 shrink-0">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setSidebarOpen(!isSidebarOpen)} 
+                className={`p-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all active:scale-90 shadow-sm`}
+                title={isSidebarOpen ? "إخفاء القائمة" : "إظهار القائمة"}
+              >
+                {isSidebarOpen ? <ChevronRight size={22} /> : <Menu size={22} />}
+              </button>
+              <div className="hidden sm:block">
+                <h2 className="font-black text-slate-800 dark:text-white text-lg">لوحة التحكم</h2>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">أهلاً بك مجدداً</p>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 font-black shadow-inner">ع ا</div>
-          </div>
-        </header>
+            </div>
 
-        <div className="flex-1 overflow-y-auto p-6 lg:p-10 scroll-smooth">
-          {renderContent()}
-
-          <div className="mt-20 bg-slate-900 rounded-[3rem] p-8 lg:p-12 text-white relative overflow-hidden shadow-2xl">
-             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[100px] rounded-full"></div>
-             <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
-                <div className="space-y-4 text-right">
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-500/20 text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">ذكاء اصطناعي</div>
-                  <h2 className="text-3xl lg:text-4xl font-black leading-tight">كيف تبدو أرقامك اليوم؟</h2>
-                  <p className="text-slate-400 max-w-md text-base lg:text-lg font-medium">دع محرك الذكاء الاصطناعي يحلل بياناتك ويعطيك نصائح لزيادة أرباحك بناءً على سلوك العملاء.</p>
-                </div>
-                <button onClick={handleGenerateInsights} disabled={isAnalyzing} className="w-full lg:w-auto px-10 py-5 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-500 hover:-translate-y-1 active:scale-95 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-emerald-500/20">
-                  {isAnalyzing ? <Loader2 className="animate-spin" /> : <Sparkles />}
-                  توليد تقرير ذكي
+            <div className="flex items-center gap-4">
+                <button 
+                  onClick={toggleDarkMode}
+                  className="p-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-600 dark:hover:text-amber-400 transition-all active:scale-90 shadow-sm"
+                  title={isDarkMode ? "الوضع الفاتح" : "الوضع الليلي"}
+                >
+                  {isDarkMode ? <Sun size={22} /> : <Moon size={22} />}
                 </button>
-             </div>
-             {insights && (
-                <div className="mt-10 p-8 bg-white/5 backdrop-blur-md rounded-3xl border border-white/10 animate-in slide-in-from-bottom-5 duration-500">
-                  <div className="prose prose-invert max-w-none">
-                    <p className="text-lg leading-relaxed font-medium whitespace-pre-wrap text-slate-200">{insights}</p>
-                  </div>
+                <div className="text-left hidden xs:block">
+                  <p className="text-sm font-black text-slate-800 dark:text-white">عامر ابراهيم</p>
+                  <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest text-left">مسؤول النظام</p>
                 </div>
-             )}
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-black shadow-inner">ع ا</div>
+            </div>
+          </header>
+
+          <div className="flex-1 overflow-y-auto p-6 lg:p-10 scroll-smooth">
+            {renderContent()}
+
+            <div className="mt-20 bg-emerald-50 dark:bg-emerald-900/10 rounded-[3rem] p-8 lg:p-12 text-slate-800 dark:text-slate-200 relative overflow-hidden shadow-sm border border-emerald-100 dark:border-emerald-900/30">
+               <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[100px] rounded-full"></div>
+               <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
+                  <div className="space-y-4 text-right">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-200 dark:border-emerald-800">ذكاء اصطناعي</div>
+                    <h2 className="text-3xl lg:text-4xl font-black leading-tight">كيف تبدو أرقامك اليوم؟</h2>
+                    <p className="text-slate-600 dark:text-slate-400 max-w-md text-base lg:text-lg font-medium">دع محرك الذكاء الاصطناعي يحلل بياناتك ويعطيك نصائح لزيادة أرباحك بناءً على سلوك العملاء.</p>
+                  </div>
+                  <button onClick={handleGenerateInsights} disabled={isAnalyzing} className="w-full lg:w-auto px-10 py-5 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-500 hover:-translate-y-1 active:scale-95 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-emerald-500/20">
+                    {isAnalyzing ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                    توليد تقرير ذكي
+                  </button>
+               </div>
+               {insights && (
+                  <div className="mt-10 p-8 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-3xl border border-emerald-100 dark:border-emerald-900/30 animate-in slide-in-from-bottom-5 duration-500">
+                    <div className="prose prose-invert max-w-none">
+                      <p className="text-lg leading-relaxed font-medium whitespace-pre-wrap text-slate-700 dark:text-slate-300">{insights}</p>
+                    </div>
+                  </div>
+               )}
+            </div>
+            
+            <footer className="mt-10 py-6 text-center text-slate-300 dark:text-slate-700 text-xs font-bold uppercase tracking-[0.2em]">
+              &copy; {new Date().getFullYear()} نظام إدارة المبيعات المتكامل
+            </footer>
           </div>
-          
-          <footer className="mt-10 py-6 text-center text-slate-300 text-xs font-bold uppercase tracking-[0.2em]">
-            &copy; {new Date().getFullYear()} نظام إدارة المبيعات المتكامل
-          </footer>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };
